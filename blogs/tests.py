@@ -28,13 +28,13 @@ class TestBlog(TestCase):
     def test_crud(self):
         self.client.login()
         resp = self.create_blog()
-        self.assertGreaterEqual(Image.objects.count(), 1)
-        print(resp.json())
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        blog_dict = {}
-        blog_dict.update(title="test", description="testdesc")
-        resp = self.client.post("/blogs/", blog_dict)
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        # self.assertGreaterEqual(Image.objects.count(), 1)
+        # print(resp.json())
+        # self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # blog_dict = {}
+        # blog_dict.update(title="test", description="testdesc")
+        # resp = self.client.post("/blogs/", blog_dict)
+        # self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
         # resp = self.client.post(
         #     "/admin/voice_profiles/", encoded, content_type=MULTIPART_CONTENT

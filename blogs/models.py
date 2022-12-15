@@ -15,16 +15,19 @@ class TitleBaseModel(CommonModel):
 # Create your models here.
 class Blog(TitleBaseModel):
     objects = BlogManager()
+    user_id = models.PositiveIntegerField()
     categories: models.Manager["Category"]
 
 
 class Category(TitleBaseModel):
     objects = CategoryManager()
+    user_id = models.PositiveIntegerField()
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="categories")
     order = models.PositiveIntegerField(default=0)
 
 
 class Article(TitleBaseModel):
+    user_id = models.PositiveIntegerField()
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="articles"
     )
@@ -32,6 +35,7 @@ class Article(TitleBaseModel):
 
 
 class Comment(CommonModel):
+    user_id = models.PositiveIntegerField()
     article = models.ForeignKey(
         Article, on_delete=models.CASCADE, related_name="comments"
     )

@@ -6,7 +6,7 @@ from blogs.models import Blog, Category, Article, Comment
 from common_module.serializers import (
     BaseSerializer,
     ImageSerializer,
-    OnlyOneImageInjector,
+    ImageInjector,
     UserIdInjector,
 )
 
@@ -34,7 +34,7 @@ class BlogUpsertSerializer(BaseSerializer):
 
     image = serializers.FileField(required=False)
 
-    @OnlyOneImageInjector
+    @ImageInjector
     @UserIdInjector
     def create(self, validated_data):
         return super().create(validated_data)
