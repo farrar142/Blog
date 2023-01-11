@@ -23,7 +23,8 @@ class Category(TitleBaseModel):
     objects = CategoryManager()
     user_id = models.PositiveIntegerField()
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="categories")
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
+    title = models.CharField(max_length=256, default="")
 
 
 class Article(TitleBaseModel):
@@ -31,6 +32,8 @@ class Article(TitleBaseModel):
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="articles"
     )
+    is_saved = models.BooleanField(default=False)
+    title = models.CharField(max_length=256, default="")
     content = models.TextField()
 
 
