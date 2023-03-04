@@ -87,3 +87,5 @@ class AuthorizeTest(TestTemplate):
         self.client.fake()
         resp = self.client.get("/blogs/")
         print(resp)
+        resp = self.client.get("/velog/kimbangul")
+        print(resp.json())

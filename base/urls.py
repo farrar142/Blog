@@ -16,7 +16,7 @@ Including another URLconf
 from rest_framework import routers
 from django.urls import path, include
 
-from blogs.views import BlogViewSets, ArticleViewSets, CategoryViewSets
+from blogs.views import BlogViewSets, ArticleViewSets, CategoryViewSets, api
 
 
 router = routers.DefaultRouter()
@@ -24,4 +24,8 @@ router.register("blogs", BlogViewSets)
 router.register("categories", CategoryViewSets)
 router.register("articles", ArticleViewSets)
 
-urlpatterns = [path("", include(router.urls))]
+urlpatterns = [
+    path("", include(router.urls)),
+    path("", include(router.urls)),
+    path("velog/", api.urls),
+]

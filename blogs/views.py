@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import json
 
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -14,6 +15,7 @@ from blogs.serializers import ArticleReadOnlySerializer, ArticleUpsertSerializer
 
 from blogs.models import Article, Blog, Category
 from common_module.views import DisallowEditOtherUsersResourceMixin
+from .crawler import get_articles, Article as VArticle
 
 # Create your views here.
 
@@ -74,3 +76,24 @@ class ArticleViewSets(DisallowEditOtherUsersResourceMixin[Article]):
     def list(self, request, *args, **kwargs):
         self.queryset = self.queryset.filter(is_saved=True)
         return super().list(request, *args, **kwargs)
+
+
+from ninja import NinjaAPI, Schema
+
+
+api = NinjaAPI(csrf=False)
+
+
+class VelogArticle(Schema):
+    href: str
+    headline: str
+    context: str
+    date: str
+    tags: list[str]
+
+
+@api.get("{username}")
+def get_velog_articles(request, username: str):
+    articles = get_articles(username)
+    listdict = VArticle.list_to_dict(articles)
+    return json.loads(json.dumps(listdict, ensure_ascii=False))
