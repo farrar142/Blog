@@ -2,20 +2,12 @@ version: '3.7'
 
 services:
   dev:
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://172.17.0.1:${CONTAINER_PORT}']
-      interval: 10m
-      retries: 30
-      start_period: 60s
-    build:
-      dockerfile: docker/dev/dockerfile
-      context: .
+    image: sandring/blog:${PLATFORM}-dev
     container_name: ${CONTAINER_NAME}
     entrypoint: tail -f /dev/null
     volumes:
       - .:/usr/src/app
-    ports:
-      - ${CONTAINER_PORT}:8000
+      - ~/.ssh:/root/.ssh:ro
     restart: unless-stopped
   deploy:
     healthcheck:
@@ -24,16 +16,16 @@ services:
       retries: 30
       start_period: 60s
     build:
-      dockerfile: docker/dev/dockerfile
+      dockerfile: docker/deploy/dockerfile
       context: .
+      args:
+        PLATFORM: ${PLATFORM}
     container_name: ${CONTAINER_NAME}_deploy
-    entrypoint: sh dev.sh runserver 0.0.0.0:8000
-    volumes:
-      - .:/usr/src/app
+    entrypoint: sh docker/deploy/run.sh
+    hostname: root
     ports:
-      - ${CONTAINER_PORT}:8000
+      - '${CONTAINER_PORT}:8000'
     restart: unless-stopped
-    # cpus: .10
-    # mem_limit: "1.5G"
+    working_dir: /usr/src/app
     environment:
       TZ: 'Asia/Seoul'

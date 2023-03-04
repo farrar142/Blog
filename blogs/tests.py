@@ -18,12 +18,17 @@ def encoded_image_args(args: dict, image: str):
 class TestTemplate(TestCase):
     blog_id: int
 
-    def create_blog(self):
+    def _create_blog(self, title="test"):
         blog_dict = {}
-        blog_dict.update(title="test", description="testdesc")
+        blog_dict.update(title=title, description="testdesc")
         encoded = encoded_image_args(blog_dict, "base/dummy/image.jpeg")
         resp = self.client.post("/blogs/", encoded, content_type=MULTIPART_CONTENT)
+        return resp
+
+    def create_blog(self):
+        resp = self._create_blog()
         self.blog_id = resp.json().get("id")
+        self.blog_name = resp.json().get("title")
         return resp
 
 
@@ -41,9 +46,22 @@ class TestBlog(TestTemplate):
         blog_dict.update(title="test", description="testdesc")
         resp = self.client.post("/blogs/", blog_dict)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-        resp = self.client.patch(f"/blogs/{self.blog_id}/", {"title": "test2"})
+        new_title = "test2"
+        resp = self.client.patch(f"/blogs/{self.blog_id}/", {"title": new_title})
+        self.blog_name = new_title
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.client.logout()
+        resp = self.client.get(f"/blogs/{self.blog_id}/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.client.delete(f"/blogs/{self.blog_id}/")
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_cannot_have_two_blog(self):
+        self.client.login()
+        self._create_blog()
+        resp = self._create_blog("doubled")
+        print(f"{resp.json()=}")
+        self.assertEqual(resp.status_code, 400)
 
 
 class TestCategory(TestTemplate):
@@ -56,5 +74,16 @@ class TestCategory(TestTemplate):
         cat_id = resp.json().get("id")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.client.patch(f"/categories/{cat_id}/", {"title": "changed"})
+        print(resp.json())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual("changed", resp.json().get("title"))
+        resp = self.client.get(f"/categories/{cat_id}/")
+
+        print(resp.json())
+
+
+class AuthorizeTest(TestTemplate):
+    def test_authorize(self):
+        self.client.fake()
+        resp = self.client.get("/blogs/")
+        print(resp)
