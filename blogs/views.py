@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 import json
 
 from rest_framework import viewsets
@@ -22,23 +22,19 @@ from .crawler import get_articles, Article as VArticle
 
 class BlogViewSets(DisallowEditOtherUsersResourceMixin[Blog]):
     queryset = Blog.objects.all()
-    filterset_fields = ("user_id",)
+    filterset_fields = ("user__id", "user__nickname")
     # search_fields = ["tags__name"]
     ordering_fileds = ("created_at",)
     ordering = ("-created_at",)
+    read_only_serializer = BlogReadOnlySerializer
+    upsert_serializer = BlogUpsertSerializer
 
-    def get_serializer_class(self):
-        serializer_classes = {
-            "GET": BlogReadOnlySerializer,
-            "__default__": BlogUpsertSerializer,
-        }
-        method = self.request.method or "GET"
-
-        return serializer_classes.get(method, serializer_classes.get("__default__"))
-
-    # @action(methods=["GET"], detail=False, url_path="find_by_name/")
-    # def get_blog_of_user(self, *args, **kwargs):
-    #     return Response({})
+    @action(methods=["GET"], detail=False, url_path="nickname/(?P<nickname>[^/.]+)")
+    def find_by_nickname(self, *args, **kwargs):
+        nickname = kwargs.get("nickname")
+        obj = get_object_or_404(Blog, user__nickname=nickname)
+        serialzier = self.get_serializer(instance=obj)
+        return Response(data=serialzier.data)
 
 
 class CategoryViewSets(DisallowEditOtherUsersResourceMixin[Category]):
@@ -46,15 +42,8 @@ class CategoryViewSets(DisallowEditOtherUsersResourceMixin[Category]):
     filterset_fields = ("blog__title",)
     ordering_fileds = ("created_at",)
     ordering = ("-created_at",)
-
-    def get_serializer_class(self):
-        serializer_classes = {
-            "GET": CategoryReadOnlySerializer,
-            "__default__": CategoryUpsertSerializer,
-        }
-        method = self.request.method or "GET"
-
-        return serializer_classes.get(method, serializer_classes.get("__default__"))
+    read_only_serializer = CategoryReadOnlySerializer
+    upsert_serializer = CategoryUpsertSerializer
 
 
 class ArticleViewSets(DisallowEditOtherUsersResourceMixin[Article]):
@@ -63,15 +52,8 @@ class ArticleViewSets(DisallowEditOtherUsersResourceMixin[Article]):
     # search_fields = ["tags__name"]
     ordering_fileds = ("created_at",)
     ordering = ("-created_at",)
-
-    def get_serializer_class(self):
-        serializer_classes = {
-            "GET": ArticleReadOnlySerializer,
-            "__default__": ArticleUpsertSerializer,
-        }
-        method = self.request.method or "GET"
-
-        return serializer_classes.get(method, serializer_classes.get("__default__"))
+    read_only_serializer = ArticleReadOnlySerializer
+    upsert_serializer = ArticleUpsertSerializer
 
     def list(self, request, *args, **kwargs):
         self.queryset = self.queryset.filter(is_saved=True)
@@ -97,3 +79,10 @@ def get_velog_articles(request, username: str):
     articles = get_articles(username)
     listdict = VArticle.list_to_dict(articles)
     return json.loads(json.dumps(listdict, ensure_ascii=False))
+
+
+209 - 50 - 40
+
+119 - 32
+
+87

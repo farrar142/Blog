@@ -1,6 +1,6 @@
 from django.db import models
 from blogs.managers import BlogManager, CategoryManager
-
+from users.models import User
 from common_module.models import CommonModel
 
 
@@ -14,12 +14,14 @@ class TitleBaseModel(CommonModel):
 
 # Create your models here.
 class Blog(TitleBaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blogs")
     objects = BlogManager()
     title = models.CharField(max_length=256, unique=True)
     categories: models.Manager["Category"]
 
 
 class Category(TitleBaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
     objects = CategoryManager()
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="categories")
     order = models.PositiveIntegerField(blank=True, default=0)
@@ -27,6 +29,7 @@ class Category(TitleBaseModel):
 
 
 class Article(TitleBaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="articles")
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="articles"
     )
@@ -36,6 +39,7 @@ class Article(TitleBaseModel):
 
 
 class Comment(CommonModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     article = models.ForeignKey(
         Article, on_delete=models.CASCADE, related_name="comments"
     )

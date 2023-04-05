@@ -1,7 +1,10 @@
 from common_module.test import TestCase
 from common_module.models import Image
 from rest_framework import status
+from django.core.cache import cache
 from django.test.client import MULTIPART_CONTENT, encode_multipart, BOUNDARY
+
+from users.models import User
 
 
 def encoded_image_args(args: dict, image: str):
@@ -27,12 +30,17 @@ class TestTemplate(TestCase):
 
     def create_blog(self):
         resp = self._create_blog()
+        print(resp.json())
         self.blog_id = resp.json().get("id")
         self.blog_name = resp.json().get("title")
         return resp
 
 
 class TestBlog(TestTemplate):
+    def setUp(self) -> None:
+        super().setUp()
+        cache.delete_many(cache.keys("*"))
+
     def tearDown(self):
         return super().tearDown()
 
@@ -55,6 +63,9 @@ class TestBlog(TestTemplate):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         resp = self.client.delete(f"/blogs/{self.blog_id}/")
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+        resp = self.client.get("/blogs/nickname/sandring/")
+        print(resp.status_code)
+        print(resp.content)
 
     def test_cannot_have_two_blog(self):
         self.client.login()
@@ -65,12 +76,18 @@ class TestBlog(TestTemplate):
 
 
 class TestCategory(TestTemplate):
+    def setUp(self) -> None:
+        super().setUp()
+        cache.delete_many(cache.keys("*"))
+
     def test_post_update(self):
         self.client.login()
+        print(User.objects.all())
         self.create_blog()
         resp = self.client.post(
             f"/categories/", {"blog": self.blog_id, "title": "test_category"}
         )
+        print(resp.json())
         cat_id = resp.json().get("id")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.client.patch(f"/categories/{cat_id}/", {"title": "changed"})
@@ -87,5 +104,5 @@ class AuthorizeTest(TestTemplate):
         self.client.fake()
         resp = self.client.get("/blogs/")
         print(resp)
-        resp = self.client.get("/velog/kimbangul")
-        print(resp.json())
+        # resp = self.client.get("/velog/kimbangul")
+        # print(resp.json())

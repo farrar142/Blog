@@ -40,7 +40,10 @@ class BlogUpsertSerializer(BaseSerializer):
     @UserIdInjector
     @ImageInjector
     def create(self, validated_data):
-        return super().create(validated_data)
+        print(f"{validated_data=}")
+        instance = super().create(validated_data)
+        print(f"{instance=}")
+        return instance
 
     @UserIdInjector
     def update(self, instance, validated_data):
@@ -67,11 +70,11 @@ class CategoryUpsertSerializer(BaseSerializer):
     @ResourceOwnerCheck("blog")
     @UserIdInjector
     def create(self, validated_data):
-        user = self.context["request"].user
+        user = self.context["request"].auth
         if not user:
             raise exceptions.NotAuthenticated
         blog: Blog = validated_data["blog"]
-        if blog.user_id != user["user_id"]:
+        if blog.user.pk != user.user_id:
             raise ConflictException(detail={"blog": ["해당 블로그의 소유자가 아닙니다."]})
         return super().create(validated_data)
 
